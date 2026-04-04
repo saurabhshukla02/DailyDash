@@ -1,0 +1,91 @@
+{
+  "name": "DailyLog",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "The date this log is for"
+    },
+    "tasks": {
+      "type": "array",
+      "description": "Array of task states for this day",
+      "items": {
+        "type": "object",
+        "properties": {
+          "template_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "task_type": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "daily_goal": {
+            "type": "number"
+          },
+          "completed": {
+            "type": "boolean",
+            "default": false
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "notes": {
+            "type": "string"
+          },
+          "track_streak": {
+            "type": "boolean"
+          },
+          "subtasks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "task_type": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "subtask_completions": {
+            "type": "object",
+            "description": "Map of subtask id to boolean completion status"
+          }
+        }
+      }
+    },
+    "is_closed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this day has been closed"
+    }
+  },
+  "required": [
+    "date"
+  ]
+}

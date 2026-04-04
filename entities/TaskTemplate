@@ -1,0 +1,66 @@
+{
+  "name": "TaskTemplate",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "health",
+        "routine",
+        "diet",
+        "spending"
+      ]
+    },
+    "task_type": {
+      "type": "string",
+      "enum": [
+        "binary",
+        "steps",
+        "protein",
+        "spending"
+      ]
+    },
+    "unit": {
+      "type": "string"
+    },
+    "daily_goal": {
+      "type": "number"
+    },
+    "order": {
+      "type": "number"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "track_streak": {
+      "type": "boolean",
+      "default": false
+    },
+    "subtasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "task_type": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "name",
+    "category",
+    "task_type"
+  ]
+}
