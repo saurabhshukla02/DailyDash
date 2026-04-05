@@ -1,13 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+
 import { useQuery } from "@tanstack/react-query";
 import { format, subDays, parseISO } from "date-fns";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid } from "recharts";
-import { Footprints, Beef, DollarSign, CheckCircle2 } from "lucide-react";
+import { Footprints, Beef, Wallet, CheckCircle2 } from "lucide-react";
+
+const CURRENCY_SYMBOLS = { USD:"$", EUR:"€", GBP:"£", INR:"₹", JPY:"¥", CAD:"CA$", AUD:"A$", CHF:"Fr", CNY:"¥", BRL:"R$", MXN:"MX$", SGD:"S$" };
 
 export default function Analytics() {
   const [range, setRange] = useState("week");
+  const [currencySymbol, setCurrencySymbol] = useState("$");
+
+  useEffect(() => {
+    base44.auth.me().then(user => {
+      if (user?.currency) setCurrencySymbol(CURRENCY_SYMBOLS[user.currency] || user.currency);
+    });
+  }, []);
 
   const { data: allLogs = [], isLoading } = useQuery({
     queryKey: ["analytics-logs"],
@@ -46,7 +56,7 @@ export default function Analytics() {
     { key: "completionRate", label: "Completion Rate", icon: CheckCircle2, color: "hsl(220, 65%, 54%)", suffix: "%" },
     { key: "steps", label: "Steps", icon: Footprints, color: "hsl(152, 55%, 48%)", suffix: "" },
     { key: "protein", label: "Protein (g)", icon: Beef, color: "hsl(43, 96%, 56%)", suffix: "g" },
-    { key: "spending", label: "Spending ($)", icon: DollarSign, color: "hsl(220, 10%, 54%)", suffix: "" },
+    { key: "spending", label: `Spending (${currencySymbol})`, icon: Wallet, color: "hsl(220, 10%, 54%)", suffix: "" },
   ];
 
   if (isLoading) {

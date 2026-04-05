@@ -4,15 +4,20 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const unitLabels = { steps: "steps", protein: "g", spending: "$" };
+const unitLabels = { steps: "steps", protein: "g" };
 
-export default function AddEntryDialog({ tasks, onAdd, onClose }) {
+export default function AddEntryDialog({ tasks, onAdd, onClose, currencySymbol = "$" }) {
+
   const [selectedId, setSelectedId] = useState(tasks[0]?.template_id || "");
   const [desc, setDesc] = useState("");
   const [value, setValue] = useState("");
 
   const selectedTask = tasks.find(t => t.template_id === selectedId);
-  const unit = selectedTask ? (unitLabels[selectedTask.task_type] || selectedTask.unit || "") : "";
+  const unit = selectedTask
+    ? (selectedTask.task_type === "spending"
+        ? currencySymbol
+        : (unitLabels[selectedTask.task_type] || selectedTask.unit || ""))
+    : "";
 
   const handleSubmit = (e) => {
     e.preventDefault();

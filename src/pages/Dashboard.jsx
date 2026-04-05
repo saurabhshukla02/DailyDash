@@ -90,7 +90,7 @@ export default function Dashboard() {
     // Remove tasks whose template was deleted or deactivated
     const filteredTasks = (todayLog.tasks || []).filter(t => activeTemplateIds.has(t.template_id));
 
-    // Update daily_goal, name, track_streak, subtasks on existing tasks if template changed
+    // Update daily_goal, name, track_streak, task_type, unit, category, subtasks on existing tasks if template changed
     const updatedTasks = filteredTasks.map(t => {
       const tmpl = templateMap[t.template_id];
       if (!tmpl) return t;
@@ -101,14 +101,26 @@ export default function Dashboard() {
       const oldSubtasksJson = JSON.stringify(t.subtasks || []);
       const newSubtasksJson = JSON.stringify(newSubtasks);
       const subtasksChanged = oldSubtasksJson !== newSubtasksJson;
-      if (goalChanged || nameChanged || streakChanged || subtasksChanged) {
-        // Preserve existing subtask completions; only add/remove entries for changed subtasks
+      const typeChanged = tmpl.task_type !== t.task_type;
+      const categoryChanged = tmpl.category !== t.category;
+      const unitChanged = tmpl.unit !== t.unit;
+      if (goalChanged || nameChanged || streakChanged || subtasksChanged || typeChanged || categoryChanged || unitChanged) {
         const existingCompletions = t.subtask_completions || {};
-        const validIds = new Set(newSubtasks.map(s => s.id));
+        const validIds = newSubtasks.map(s => s.id);
         const prunedCompletions = Object.fromEntries(
-          Object.entries(existingCompletions).filter(([id]) => validIds.has(id))
+          Object.entries(existingCompletions).filter(([id]) => validIds.includes(id))
         );
-        return { ...t, daily_goal: tmpl.daily_goal, name: tmpl.name, track_streak: tmpl.track_streak || false, subtasks: newSubtasks, subtask_completions: prunedCompletions };
+        return {
+          ...t,
+          daily_goal: tmpl.daily_goal,
+          name: tmpl.name,
+          track_streak: tmpl.track_streak || false,
+          task_type: tmpl.task_type,
+          category: tmpl.category,
+          unit: tmpl.unit,
+          subtasks: newSubtasks,
+          subtask_completions: prunedCompletions,
+        };
       }
       return t;
     });
@@ -332,6 +344,7 @@ export default function Dashboard() {
           tasks={nonBinaryTasks}
           onAdd={handleQuickAddEntry}
           onClose={() => setShowAddEntry(false)}
+          currencySymbol={currencySymbol}
         />
       )}
 

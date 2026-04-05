@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 
 const unitLabels = { steps: "steps", protein: "g" };
@@ -11,9 +12,32 @@ export default function NonBinaryTask({ task, onAddEntry, onRemoveEntry, currenc
   const [desc, setDesc] = useState("");
   const [value, setValue] = useState("");
 
-  const unit = task.task_type === "spending" ? currencySymbol : (unitLabels[task.task_type] || task.unit || "");
+  const isSpending = task.task_type === "spending";
+  const unit = isSpending ? currencySymbol : (unitLabels[task.task_type] || task.unit || "");
   const total = (task.entries || []).reduce((sum, e) => sum + (e.value || 0), 0);
-  const goalMet = task.daily_goal && total >= task.daily_goal;
+  const goal = typeof task.daily_goal === "number" ? task.daily_goal : (task.daily_goal ? parseFloat(task.daily_goal) : 0);
+  const goalMet = goal > 0 && total >= goal;
+
+  let statusClass = "text-muted-foreground";
+  let statusSuffix = "";
+
+  if (isSpending && goal > 0) {
+    const diff = goal - total;
+    if (total > goal) {
+      statusClass = "text-red-600";
+      statusSuffix = " • Over limit!";
+    } else if (diff <= 50) {
+      statusClass = "text-amber-600";
+      statusSuffix = " • Almost at limit";
+    } else {
+      statusClass = "text-emerald-600";
+    }
+  } else {
+    statusClass = goalMet ? "text-emerald-600" : "text-muted-foreground";
+  }
+
+  const showNearLimitAlert = isSpending && goal > 0 && total < goal && goal - total <= 50;
+  const showOverLimitAlert = isSpending && goal > 0 && total > goal;
 
   const handleAdd = () => {
     if (!value) return;
@@ -28,13 +52,18 @@ export default function NonBinaryTask({ task, onAddEntry, onRemoveEntry, currenc
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-foreground">{task.name}</p>
-          <p className={cn(
-            "text-xs font-semibold mt-0.5",
-            goalMet ? "text-emerald-600" : "text-muted-foreground"
-          )}>
-            {task.task_type === "spending" ? `${currencySymbol}${total.toFixed(2)}` : `${total.toLocaleString()} ${unit}`}
-            {task.daily_goal ? ` / ${task.task_type === "spending" ? currencySymbol : ""}${task.daily_goal.toLocaleString()} ${task.task_type !== "spending" ? unit : ""}` : ""}
-            {goalMet && " ✓"}
+          <p
+            className={cn(
+              "text-xs font-semibold mt-0.5",
+              statusClass
+            )}
+          >
+            {isSpending ? `${currencySymbol}${total.toFixed(2)}` : `${total.toLocaleString()} ${unit}`}
+            {goal
+              ? ` / ${isSpending ? currencySymbol : ""}${goal.toLocaleString()}${!isSpending && unit ? ` ${unit}` : ""}`
+              : ""}
+            {!isSpending && goalMet && " ✓"}
+            {isSpending && statusSuffix}
           </p>
         </div>
         <Button
@@ -46,6 +75,31 @@ export default function NonBinaryTask({ task, onAddEntry, onRemoveEntry, currenc
           <Plus className="w-4 h-4" />
         </Button>
       </div>
+
+      {isSpending && (showNearLimitAlert || showOverLimitAlert) && (
+        <div className="mt-2">
+          <Alert
+            className={cn(
+              "border text-xs",
+              showOverLimitAlert
+                ? "border-red-200 bg-red-50 text-red-700"
+                : "border-amber-200 bg-amber-50 text-amber-800"
+            )}
+          >
+            <AlertTriangle
+              className={cn(
+                "h-4 w-4",
+                showOverLimitAlert ? "text-red-500" : "text-amber-500"
+              )}
+            />
+            <AlertDescription className="text-xs">
+              {showOverLimitAlert
+                ? `You have exceeded your spending limit for ${task.name}.`
+                : `You're almost at your spending limit for ${task.name}!`}
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
 
       {(task.entries || []).length > 0 && (
         <div className="mt-2 space-y-1">
